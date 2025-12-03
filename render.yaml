@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: genai-backend
+    runtime: python
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start_server.py
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: ENVIRONMENT
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://genaiv-three.vercel.app,https://genaiv.vercel.app
+      - key: PEXELS_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DEEPAI_API_KEY
+        sync: false

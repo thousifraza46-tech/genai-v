@@ -125,28 +125,42 @@ def start_server():
     """Start the Flask API server"""
     print_header("STARTING API SERVER")
     
-    print_info("Flask server will start on http://localhost:5000")
-    print_info("Press Ctrl+C to stop the server\n")
+    # Get port from environment or default to 5000
+    port = int(os.environ.get('PORT', 5000))
+    environment = os.environ.get('ENVIRONMENT', 'development')
+    
+    print_info(f"Server will start on port {port}")
+    print_info(f"Environment: {environment}\n")
     
     try:
-        # Import and run the server
+        # Import the Flask app
         from api_server import app
         
         print(f"{Colors.GREEN}{Colors.BOLD}")
         print("🚀 API SERVER RUNNING")
         print("=" * 60)
-        print("📡 Backend API: http://localhost:5000")
-        print("🔗 API Endpoints: http://localhost:5000/api")
-        print("📖 Health Check: http://localhost:5000/api/health")
+        print(f"📡 Backend API: http://0.0.0.0:{port}")
+        print(f"🔗 API Endpoints: http://0.0.0.0:{port}/api")
+        print(f"📖 Health Check: http://0.0.0.0:{port}/api/health")
         print("=" * 60)
         print(f"{Colors.RESET}\n")
         
-        app.run(debug=True, host='0.0.0.0', port=5000)
+        if environment == 'production':
+            # Use Waitress for production
+            print_info("Using Waitress WSGI server (production mode)")
+            from waitress import serve
+            serve(app, host='0.0.0.0', port=port, threads=4)
+        else:
+            # Use Flask development server for local development
+            print_info("Using Flask development server (debug mode)")
+            app.run(debug=True, host='0.0.0.0', port=port)
         
     except KeyboardInterrupt:
         print(f"\n\n{Colors.YELLOW}⏹️  Server stopped by user{Colors.RESET}")
     except Exception as e:
         print_error(f"Server failed to start: {e}")
+        import traceback
+        traceback.print_exc()
         return False
     
     return True

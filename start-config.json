@@ -1,0 +1,11 @@
+{
+  "name": "AI Video Generator",
+  "version": "1.0.0",
+  "description": "Auto-start configuration for frontend and backend",
+  "scripts": {
+    "start": "concurrently \"npm run backend\" \"npm run frontend\" --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\"",
+    "backend": "cd backend && python api_server.py",
+    "frontend": "vite",
+    "dev": "npm run start"
+  }
+}

@@ -1,4 +1,3 @@
-# Vercel Configuration for Frontend
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",

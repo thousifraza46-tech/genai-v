@@ -667,6 +667,111 @@ def export_edited_video():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/api/editor/combine-clips', methods=['POST', 'OPTIONS'])
+def combine_clips():
+    """
+    Combine multiple video clips into one continuous video
+    
+    POST /api/editor/combine-clips
+    Body: {
+        "clips": ["/path/to/clip1.mp4", "/path/to/clip2.mp4", ...]
+    }
+    
+    Returns: {
+        "video_url": "/assets/edited_videos/combined_video.mp4",
+        "duration": 45.2,
+        "status": "success"
+    }
+    """
+    # Handle CORS preflight
+    if request.method == 'OPTIONS':
+        return jsonify({'status': 'ok'}), 200
+    
+    try:
+        data = request.json
+        clip_paths = data.get('clips', [])
+        
+        if not clip_paths or len(clip_paths) < 2:
+            return jsonify({'error': 'At least 2 clips are required to combine'}), 400
+        
+        print(f"\n[Editor] ========================================")
+        print(f"[Editor] Combining {len(clip_paths)} video clips")
+        print(f"[Editor] ========================================")
+        
+        from moviepy.editor import VideoFileClip, concatenate_videoclips
+        import time
+        
+        # Load all video clips
+        video_clips = []
+        for i, clip_path in enumerate(clip_paths):
+            # Handle both absolute paths and relative URLs
+            if clip_path.startswith('/assets/'):
+                # Convert URL to file path
+                clip_path = clip_path.replace('/assets/', 'assets/')
+            
+            if not os.path.exists(clip_path):
+                print(f"[Editor] Warning: Clip not found: {clip_path}")
+                continue
+            
+            print(f"[Editor] Loading clip {i+1}/{len(clip_paths)}: {os.path.basename(clip_path)}")
+            clip = VideoFileClip(clip_path)
+            video_clips.append(clip)
+        
+        if len(video_clips) < 2:
+            return jsonify({'error': 'Not enough valid clips found to combine'}), 400
+        
+        # Concatenate all clips
+        print(f"[Editor] Concatenating {len(video_clips)} clips...")
+        final_clip = concatenate_videoclips(video_clips, method="compose")
+        
+        # Generate output filename
+        timestamp = int(time.time())
+        output_filename = f"combined_video_{timestamp}.mp4"
+        output_dir = os.path.join('assets', 'edited_videos')
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, output_filename)
+        
+        # Write combined video
+        print(f"[Editor] Writing combined video: {output_filename}")
+        final_clip.write_videofile(
+            output_path,
+            codec='libx264',
+            audio_codec='aac',
+            fps=30,
+            preset='medium',
+            threads=4
+        )
+        
+        duration = final_clip.duration
+        
+        # Clean up
+        for clip in video_clips:
+            clip.close()
+        final_clip.close()
+        
+        # Construct URL for frontend
+        video_url = f'/assets/edited_videos/{output_filename}'
+        
+        print(f"[Editor] ✅ Combined video created successfully!")
+        print(f"[Editor] Duration: {duration:.2f}s")
+        print(f"[Editor] URL: {video_url}")
+        print(f"[Editor] ========================================\n")
+        
+        return jsonify({
+            'video_url': video_url,
+            'video_path': output_path,
+            'duration': duration,
+            'clip_count': len(video_clips),
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        print(f"[Editor] ❌ Error combining clips: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/huggingface/image-to-video', methods=['POST', 'OPTIONS'])
 def hf_image_to_video():
     """Convert image to video using HuggingFace Stable Video Diffusion"""

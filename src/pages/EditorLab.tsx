@@ -286,6 +286,84 @@ const EditorLab = () => {
     }
   };
 
+  const handleCombineClips = async () => {
+    if (clips.length < 2) {
+      toast({
+        title: "Not enough clips",
+        description: "Select at least 2 clips to combine them into one video",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    setExportProgress(0);
+
+    try {
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        const currentProgress = useEditorStore.getState().exportProgress;
+        if (currentProgress >= 95) {
+          clearInterval(progressInterval);
+        } else {
+          setExportProgress(Math.min(95, currentProgress + 5));
+        }
+      }, 300);
+
+      console.log("[EditorLab] Combining", clips.length, "clips");
+      
+      // Call backend API to combine clips
+      const response = await fetch(getApiUrl('/editor/combine-clips'), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clips: clips.map((clip) => clip.url),
+        }),
+      });
+
+      clearInterval(progressInterval);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+        console.error("[EditorLab] Combine failed:", errorData);
+        throw new Error(errorData.error || "Failed to combine clips");
+      }
+
+      const data = await response.json();
+      console.log("[EditorLab] Combine successful:", data);
+      setExportProgress(100);
+
+      toast({
+        title: "Clips combined successfully!",
+        description: `${data.clip_count} clips merged into one video (${data.duration.toFixed(1)}s)`,
+      });
+
+      // Download the combined video
+      if (data.video_url) {
+        const link = document.createElement("a");
+        link.href = data.video_url;
+        link.download = `combined-video-${Date.now()}.mp4`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error: any) {
+      console.error("[EditorLab] Combine error:", error);
+      toast({
+        title: "Combine failed",
+        description: error.message || "Failed to combine video clips. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setTimeout(() => {
+        setIsExporting(false);
+        setExportProgress(0);
+      }, 1000);
+    }
+  };
+
   const handleClearAll = () => {
     if (window.confirm("Are you sure you want to clear all clips? This cannot be undone.")) {
       clearAll();
@@ -353,6 +431,24 @@ const EditorLab = () => {
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCombineClips}
+                  disabled={isExporting || clips.length < 2}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Combining...
+                    </>
+                  ) : (
+                    <>
+                      <Video className="w-4 h-4 mr-2" />
+                      Combine Clips
+                    </>
+                  )}
                 </Button>
                 <Button
                   onClick={handleExport}

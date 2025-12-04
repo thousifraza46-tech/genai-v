@@ -633,12 +633,18 @@ def export_edited_video():
         if not clips:
             return jsonify({'error': 'No clips provided'}), 400
         
-        print(f"[Editor] Exporting {len(clips)} clips")
+        print(f"\n[Editor] ========================================")
+        print(f"[Editor] Export Video - Processing {len(clips)} clips")
+        print(f"[Editor] ========================================")
+        
+        for i, clip in enumerate(clips):
+            print(f"[Editor] Clip {i+1}: {clip.get('url', 'unknown')}")
         
         # Import video editor
         from video_editor import editor
         
         # Export video
+        print(f"[Editor] Starting export process...")
         output_path = editor.export_video(clips)
         
         # Get video duration
@@ -651,7 +657,10 @@ def export_edited_video():
         filename = os.path.basename(output_path)
         video_url = f'/assets/edited_videos/{filename}'
         
-        print(f"[Editor] Export complete: {video_url}")
+        print(f"[Editor] ✅ Export complete!")
+        print(f"[Editor] Output: {video_url}")
+        print(f"[Editor] Duration: {duration:.2f}s")
+        print(f"[Editor] ========================================\n")
         
         return jsonify({
             'video_url': video_url,
@@ -661,9 +670,10 @@ def export_edited_video():
         })
         
     except Exception as e:
-        print(f"[Editor] Export error: {str(e)}")
+        print(f"[Editor] ❌ Export error: {str(e)}")
         import traceback
         traceback.print_exc()
+        print(f"[Editor] ========================================\n")
         return jsonify({'error': str(e)}), 500
 
 
@@ -923,6 +933,7 @@ if __name__ == '__main__':
     print("  POST /api/generate/render - Render final video")
     print("  POST /api/generate/video - Generate complete video (full pipeline)")
     print("  POST /api/editor/export - Export edited video from Editor Lab")
+    print("  POST /api/editor/combine-clips - Combine multiple clips into one video")
     print("  GET  /assets/<filename> - Serve audio/video files")
     print("  POST /api/huggingface/image-to-video - Convert image to video (AI)")
     print("\n💡 Use start_server.py in root directory for production server with Waitress")

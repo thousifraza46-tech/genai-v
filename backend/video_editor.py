@@ -131,12 +131,30 @@ class VideoEditor:
         try:
             # Download and process each clip
             for idx, clip_data in enumerate(clips_data):
-                # Download video
+                # Get video URL/path
                 video_url = clip_data.get("url")
-                temp_video_path = os.path.join(temp_dir, f"clip_{idx}.mp4")
-                self.download_video(video_url, temp_video_path)
-                downloaded_clips.append(temp_video_path)
+                
+                # Check if it's a local file path or URL
+                if video_url.startswith('/assets/'):
+                    # Local file - convert URL to path
+                    video_path = video_url.replace('/assets/', 'assets/')
+                    if not os.path.exists(video_path):
+                        raise Exception(f"Video file not found: {video_path}")
+                    temp_video_path = video_path
+                elif video_url.startswith('http'):
+                    # Remote URL - download it
+                    temp_video_path = os.path.join(temp_dir, f"clip_{idx}.mp4")
+                    print(f"[Editor] Downloading clip {idx+1}...")
+                    self.download_video(video_url, temp_video_path)
+                    downloaded_clips.append(temp_video_path)
+                else:
+                    # Assume it's a local path
+                    temp_video_path = video_url
+                    if not os.path.exists(temp_video_path):
+                        raise Exception(f"Video file not found: {temp_video_path}")
 
+                print(f"[Editor] Processing clip {idx+1}/{len(clips_data)}: {os.path.basename(temp_video_path)}")
+                
                 # Load clip
                 clip = VideoFileClip(temp_video_path)
 

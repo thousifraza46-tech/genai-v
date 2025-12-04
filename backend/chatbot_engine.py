@@ -24,22 +24,31 @@ class ChatbotEngine:
             self.use_ai = False
         
         # System prompt for AI context
-        self.system_context = """You are a helpful and friendly AI assistant. You can discuss any topic the user wants to talk about.
+        self.system_context = """You are an intelligent and helpful AI assistant with strong comprehension skills.
 
-When users ask about video generation, you can help with:
-- Script writing and video content creation
-- Finding images/videos using Pexels
-- Video editing tips and techniques
+Core Principles:
+- LISTEN CAREFULLY: Read the user's message thoroughly to understand their actual intent
+- CONTEXT AWARE: Consider previous messages in the conversation for better understanding
+- RELEVANT RESPONSES: Provide answers that directly address what the user is asking
+- NATURAL CONVERSATION: Don't force topics - follow the user's lead
+- ASK WHEN UNCLEAR: If the request is ambiguous, ask clarifying questions
+
+Video Platform Expertise (use when relevant):
+You can help users with this video generation platform when they ask about:
+- Writing video scripts and content
+- Finding images/videos from Pexels
+- Video editing techniques
 - Creative ideas and brainstorming
+- Platform features and how to use them
 
-However, you should respond naturally to ANY topic the user brings up. If they want to talk about sports, science, cooking, or anything else - engage with them on that topic. Don't force the conversation back to video generation unless that's what they're asking about.
+General Knowledge:
+You can also discuss any other topics users bring up - technology, science, culture, entertainment, advice, or casual conversation. Provide accurate, helpful information on whatever they're interested in.
 
-Communication style:
-- Be friendly, natural, and conversational
-- Answer questions directly and helpfully
-- Use emojis when appropriate
-- Keep responses concise but informative
-- Follow the user's lead on what they want to discuss"""
+Response Style:
+- Match the user's tone (formal, casual, technical, friendly)
+- Be concise but complete - answer fully without being overly long
+- Use formatting (bullet points, emojis) when it improves clarity
+- Stay helpful, patient, and encouraging"""
         
         self.video_tips = [
             "For engaging videos, keep your intro under 5 seconds to hook viewers immediately.",
@@ -107,12 +116,29 @@ Communication style:
 Previous conversation:
 {chr(10).join(context_messages) if context_messages else 'This is the start of the conversation.'}
 
-User: {message}
+Current user message: {message}
 
-Respond as the helpful AI assistant:"""
+Instructions:
+1. Read and understand what the user is actually asking or trying to say
+2. Consider the context from previous messages if relevant
+3. Provide a direct, helpful, and accurate response to their specific question or request
+4. If the user is asking about video creation, provide detailed guidance
+5. If asking about other topics, respond naturally and informatively
+6. Match the tone and formality level of the user's message
+7. If the request is unclear, ask clarifying questions
+
+Your response:"""
             
-            # Generate AI response
-            response = self.model.generate_content(full_prompt)
+            # Generate AI response with improved settings
+            response = self.model.generate_content(
+                full_prompt,
+                generation_config={
+                    'temperature': 0.7,  # Balanced creativity and accuracy
+                    'top_p': 0.9,
+                    'top_k': 40,
+                    'max_output_tokens': 1024,
+                }
+            )
             return response.text.strip()
             
         except Exception as e:

@@ -1,14 +1,16 @@
-# Minimal Production Requirements
+# Ultra-Minimal Production Requirements (< 1 GB image size)
 flask==3.0.0
 flask-cors==4.0.0
 requests==2.31.0
 python-dotenv==1.0.0
-google-generativeai==0.3.2
-edge-tts==6.1.9
-nltk==3.8.1
 waitress==2.1.2
 
-# Optional: Comment out if build fails
+# Optional AI features (comment out to reduce image size)
+google-generativeai==0.3.2
+edge-tts==6.1.9
+
+# Heavy dependencies - DISABLED for deployment (enable only for local dev)
+# nltk==3.8.1
 # moviepy==1.0.3
 # imageio==2.31.3
 # imageio-ffmpeg==0.4.9

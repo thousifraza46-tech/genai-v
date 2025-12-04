@@ -21,6 +21,7 @@ def extract_keywords_for_pexels(user_prompt: str, max_keywords: int = 6) -> str:
     Returns:
         Clean keyword string suitable for Pexels search
     """
+    # Try NLTK if available, otherwise use simple fallback
     try:
         import nltk
         from nltk.tokenize import word_tokenize
@@ -61,6 +62,28 @@ def extract_keywords_for_pexels(user_prompt: str, max_keywords: int = 6) -> str:
         keyword_string = ' '.join(important_keywords)
         
         logger.info(f" Extracted keywords: '{user_prompt}' -> '{keyword_string}'")
+        
+        return keyword_string if keyword_string else user_prompt
+        
+    except ImportError:
+        # NLTK not available - use simple fallback keyword extraction
+        logger.info("NLTK not available, using simple keyword extraction")
+        
+        # Simple stopwords list
+        stop_words = {'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 
+                     'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'be', 
+                     'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 
+                     'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 
+                     'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 
+                     'your', 'his', 'her', 'its', 'our', 'their'}
+        
+        # Extract words (simple split)
+        words = user_prompt.lower().split()
+        keywords = [w.strip('.,!?;:') for w in words 
+                   if len(w) > 2 and w.lower() not in stop_words][:max_keywords]
+        
+        keyword_string = ' '.join(keywords)
+        logger.info(f" Extracted keywords (simple): '{user_prompt}' -> '{keyword_string}'")
         
         return keyword_string if keyword_string else user_prompt
         
